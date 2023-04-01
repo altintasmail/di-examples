@@ -1,0 +1,1 @@
+HttpContext.Current.Items ile scope'un oluşturulması örneğidir.
