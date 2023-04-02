@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Reflection;
 using System.Web;
+using System.Web.Http;
 using System.Web.Http.Controllers;
 using System.Web.Http.Dependencies;
 using System.Web.Http.Dispatcher;
@@ -14,29 +15,41 @@ using System.Web.Routing;
 
 namespace WebApplication4.IOC
 {
-    public class MyResolver : DefaultControllerFactory
+    public class MyResolver : System.Web.Http.Dependencies.IDependencyResolver, System.Web.Mvc.IDependencyResolver
     {
-        private readonly IServiceProvider serviceProvider;
+        private IServiceProvider serviceProvider { get; set; }
+        private IServiceScope serviceScope { get; set; }
 
         public MyResolver(IServiceProvider serviceProvider)
         {
             this.serviceProvider = serviceProvider;
         }
-        protected override IController GetControllerInstance(
-                RequestContext requestContext, Type controllerType)
-        {
-            IServiceScope scope = GetLifeTimeScop();
 
-            return (IController)scope.ServiceProvider.GetRequiredService(controllerType);
+        public MyResolver(IServiceScope serviceScope)
+        {
+            this.serviceScope = serviceScope;
         }
 
-        public override void ReleaseController(IController controller)
+        public IDependencyScope BeginScope()
         {
-            base.ReleaseController(controller);
+            return new MyResolver(serviceProvider.CreateScope());
+        }
 
-            var scope = GetLifeTimeScop();
+        public void Dispose()
+        {
+            serviceScope?.Dispose();
+        }
 
-            scope?.Dispose();
+        public object GetService(Type serviceType)
+        {
+            var scope = serviceScope ?? GetLifeTimeScop();
+            return scope.ServiceProvider.GetService(serviceType);
+        }
+
+        public IEnumerable<object> GetServices(Type serviceType)
+        {
+            var scope = serviceScope ?? GetLifeTimeScop();
+            return scope.ServiceProvider.GetServices(serviceType);
         }
 
         private IServiceScope GetLifeTimeScop()

@@ -21,9 +21,9 @@ namespace WebApplication4
             FilterConfig.RegisterGlobalFilters(GlobalFilters.Filters);
             RouteConfig.RegisterRoutes(RouteTable.Routes);
             BundleConfig.RegisterBundles(BundleTable.Bundles);
-            ControllerBuilder.Current.SetControllerFactory(new MyResolver(ConfigureServices()));
+            DependencyResolver.SetResolver(new MyResolver(ConfigureServices()));
         }
-        private IServiceProvider ConfigureServices()
+        public static IServiceProvider ConfigureServices()
         {
             IServiceCollection collection = new ServiceCollection();
             collection.AddTransient<ILogService, LogService>(); //servisleriniz örneğin ILogService
